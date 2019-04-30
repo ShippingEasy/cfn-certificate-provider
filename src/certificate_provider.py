@@ -30,6 +30,10 @@ class CertificateProvider(ResourceProvider):
             "additionalProperties": True,
             "properties": {
                 "DomainName": {"type": "string", "description": "to create"},
+                "SubjectAlternativeNames": {
+                    "type": "array",
+                    "description": "to be added to the certificate"
+                },
                 "ValidationMethod": {
                     "type": "string",
                     "enum": ["DNS"],
@@ -71,7 +75,7 @@ class CertificateProvider(ResourceProvider):
                 changed_properties.append(name)
 
         try:
-            if "DomainName" in changed_properties:
+            if any(p in changed_properties for p in ["DomainName", "SubjectAlternativeNames"]):
                 return self.request_certificate()
             elif (
                 changed_properties
@@ -89,8 +93,8 @@ class CertificateProvider(ResourceProvider):
                     self.fail("{}".format(error))
             elif changed_properties:
                 self.fail(
-                    'You can only change the "Options" and "DomainName" '
-                    + "of a certificate, you tried to change {}".format(
+                    'You can only change the "Options" of an existing certificate. '
+                    + "You tried to change {}".format(
                         ", ".join(changed_properties)
                     )
                 )

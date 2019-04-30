@@ -43,16 +43,27 @@ def test_create(certificates):
     response = handler(request, ())
     assert response["Status"] == "SUCCESS", response["Reason"]
     assert physical_resource_id != response["PhysicalResourceId"]
+    new_physical_resource_id = response["PhysicalResourceId"]
 
     request["OldResourceProperties"] = request["ResourceProperties"].copy()
-    request["ResourceProperties"]["SubjectAlternativeNames"] = ["new-" + alt_name]
+    request["ResourceProperties"]["SubjectAlternativeNames"] = [alt_name, 'new-' + alt_name]
+    response = handler(request, ())
+    assert response["Status"] == "SUCCESS", response["Reason"]
+    assert new_physical_resource_id != response["PhysicalResourceId"]
+
+    request["OldResourceProperties"] = request["ResourceProperties"].copy()
+    request["ResourceProperties"]["DomainValidationOptions"] = [{
+      "DomainName" : alt_name,
+      "ValidationDomain" : alt_name
+    }]
+
     response = handler(request, ())
     assert response["Status"] == "FAILED", response["Reason"]
     assert response["Reason"].startswith(
-        'You can only change the "Options" and "DomainName" of a certificate,'
+        'You can only change the "Options" of an existing certificate.'
     ), response["Reason"]
 
-    request["ResourceProperties"]["SubjectAlternativeNames"] = [alt_name]
+    request["ResourceProperties"].pop("DomainValidationOptions")
     request["ResourceProperties"]["Options"] = {
         "CertificateTransparencyLoggingPreference": "DISABLED"
     }

@@ -55,8 +55,17 @@ class CertificateDNSRecordProvider(ResourceProvider):
         return self.get("DomainName", None)
 
     @property
+    def validation_method(self):
+        return self.get("ValidationMethod")
+
+    @property
     def domain_validation_option(self):
-        result = self.certificate.get_validation_option(self.domain_name)
+
+        # A certificate's ValidationMethod applies to all domains
+        if self.validation_method == "DNS":
+            result = self.certificate.get_validation_option()
+        else:
+            result = self.certificate.get_validation_option(self.domain_name)
 
         if not result:
             raise PreConditionFailed("No validation option found for domain")

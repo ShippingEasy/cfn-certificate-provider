@@ -45,14 +45,6 @@ def test_retrieval_of_dns_record_via_update(certificate):
     assert response["PhysicalResourceId"] == response["Data"]["Name"]
 
 
-def test_retrieval_of_non_existing_domain_name(certificate):
-    request = Request("Update", certificate["CertificateArn"])
-    request["ResourceProperties"]["DomainName"] = "nonexisting.domain.name"
-    response = handler(request, {})
-    assert response["Status"] == "FAILED", response["Reason"]
-    assert response["Reason"].startswith("No validation option found for domain")
-
-
 def test_retrieval_non_existing_certificate():
     request = Request(
         "Create",
@@ -68,6 +60,14 @@ def test_create_incorrect_validation_method(email_certificate):
     response = handler(request, {})
     assert response["Status"] == "FAILED", response["Reason"]
     assert response["Reason"].startswith("domain is using validation method")
+
+
+def test_retrieval_of_non_existing_domain_name(email_certificate):
+    request = Request("Update", email_certificate["CertificateArn"])
+    request["ResourceProperties"]["DomainName"] = "nonexisting.domain.name"
+    response = handler(request, {})
+    assert response["Status"] == "FAILED", response["Reason"]
+    assert response["Reason"].startswith("No validation option found for domain")
 
 
 class Request(dict):
